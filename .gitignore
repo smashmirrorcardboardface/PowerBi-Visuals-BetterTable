@@ -1,0 +1,5 @@
+dist
+node_modules
+.vscode
+.tmp
+webpack.statistics.dev.html

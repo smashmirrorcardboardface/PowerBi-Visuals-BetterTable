@@ -1,0 +1,51 @@
+{
+    "dataRoles": [
+        {
+            "displayName": "Summary Row fields",
+            "name": "summaryRowColumn",
+            "kind": "GroupingOrMeasure"
+        },
+        {
+            "displayName": "Detail Row HTML",
+            "name": "detailHTML",
+            "kind": "GroupingOrMeasure"
+        }
+    ],
+    "objects": {
+        "expandedRow": {
+            "displayName": "Expanded Row",
+            "properties": {
+                "expandedRowHeight": {
+                    "displayName": "Height",
+                    "description": "Height of the expanded row.",
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        }
+    },
+    "dataViewMappings": [
+        {
+            "table": {
+                "rows": {
+                    "for": {
+                        "in": "summaryRowColumn"
+                    }
+                },
+                "details": {
+                    "for": {
+                        "in": "detailHTML"
+                    }
+                }
+            },
+            "conditions": [
+                {
+                    "detailHTML": {
+                        "max": 1
+                    }
+                }
+            ]
+        }
+    ]
+}
