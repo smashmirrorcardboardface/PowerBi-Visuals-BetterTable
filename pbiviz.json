@@ -4,7 +4,7 @@
         "displayName": "bettertable",
         "guid": "bettertableD343153BCF9C49CC9A338B81B3023570",
         "visualClassName": "Visual",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "description": "Using datatables.net to display a table",
         "supportUrl": "https://",
         "gitHubUrl": ""
