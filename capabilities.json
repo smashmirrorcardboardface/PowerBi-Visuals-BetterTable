@@ -29,14 +29,18 @@
         {
             "table": {
                 "rows": {
-                    "for": {
-                        "in": "summaryRowColumn"
-                    }
-                },
-                "details": {
-                    "for": {
-                        "in": "detailHTML"
-                    }
+                    "select": [
+                        {
+                            "for": {
+                                "in": "summaryRowColumn"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "detailHTML"
+                            }
+                        }
+                    ]
                 }
             },
             "conditions": [

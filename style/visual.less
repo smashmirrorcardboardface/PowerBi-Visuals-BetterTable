@@ -1,7 +1,13 @@
 @import '../node_modules/datatables.net-dt/css/jquery.dataTables.css';
 
+input:focus {
+    outline: none !important;
+    border-color: #719ECE;
+}
+
+
 .better-table {
-    width: 100%;
+
     border-collapse: collapse;
     border-spacing: 0;
     font-family: arial, sans-serif;
@@ -11,6 +17,21 @@
     }
 
     td {
-        font-size: 0.5em;
+        font-size: 0.65em;
     }
+}
+
+.dataTables_filter {
+    float: left !important;
+    padding-bottom: 10px;
+    font-size: 0.75em;
+}
+
+table.dataTable.compact thead th,
+table.dataTable.compact thead td {
+    padding-left: 2px;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    padding: 2px;
 }

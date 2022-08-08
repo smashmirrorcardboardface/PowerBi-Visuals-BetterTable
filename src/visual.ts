@@ -1,5 +1,8 @@
 'use strict';
 
+//TODO: messages when last field is removed from the well
+//TODO: make expand/collapse button icon different
+
 import './../style/visual.less';
 import powerbi from 'powerbi-visuals-api';
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
@@ -9,33 +12,35 @@ import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInst
 import VisualObjectInstance = powerbi.VisualObjectInstance;
 import DataView = powerbi.DataView;
 import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnumerationObject;
-
+import { valueFormatter } from 'powerbi-visuals-utils-formattingutils';
 import { VisualSettings } from './settings';
+
 // import * as d3select from 'd3-selection';
 
-var DataTables = require('datatables.net')();
+var DataTable = require('datatables.net')();
 import 'datatables.net-dt';
+import { formatDefaultLocale } from 'd3';
 
 export class Visual implements IVisual {
   private settings: VisualSettings;
-  private container: JQuery<HTMLElement>;
-  private initialLoop: boolean = true;
-  private betterTable: any;
+  private container: HTMLElement;
 
   constructor(options: VisualConstructorOptions) {
     console.log('Visual constructor', options);
+
     /** Visual container */
-    $(options.element).append('<table id="betterTable" class="display compact better-table" width="100%"></table>');
+    this.container = options.element.appendChild(document.createElement('div'));
+    this.container.setAttribute('style', 'width:auto');
+    $(this.container).html('<p>Looks like we have no data - Go add some in the field wells</p>');
   }
 
   public update(options: VisualUpdateOptions) {
-    console.log('betterTable update', this.betterTable);
+    console.log('Visual update', options);
 
     this.settings = Visual.parseSettings(options && options.dataViews && options.dataViews[0]);
 
     /** Test 1: Data view has valid bare-minimum entries */
     let dataViews = options.dataViews;
-    console.log('Test 1: Valid data view...');
     if (
       !dataViews ||
       !dataViews[0] ||
@@ -44,46 +49,125 @@ export class Visual implements IVisual {
       !dataViews[0].table.columns ||
       !dataViews[0].metadata
     ) {
-      console.log('Test 1 FAILED. No data to draw table.');
+      $(this.container).html('<p>Looks like we have no data - Go add some in the field wells</p>');
       return;
     }
 
     /** If we get this far, we can trust that we can work with the data! */
     let table = dataViews[0].table;
 
-    const columns = table.columns.map((col) => {
-      return { title: col.displayName };
+    let summaryColumns: Array<any> = table.columns.filter((col) => {
+      return !col.roles.detailHTML;
     });
 
-    console.log('columns', columns);
+    let detailColumnindex = table.columns.findIndex((col) => {
+      return col.roles.detailHTML;
+    });
 
-    if (this.initialLoop) {
-      console.log('Initial loop...');
-
-      this.initialLoop = false;
-    } else {
-      console.log('Not initial loop...');
-      try {
-        console.log('betterTable', this.betterTable);
-
-        this.betterTable.destroy();
-        $('#betterTable').empty();
-      } catch (e) {
-        console.log(e);
-      }
+    if (summaryColumns.length === 0) {
+      $(this.container).html(
+        '<p>Looks like we have only detail rows - we need summary data to attach to those details. Go add a summary data item in the field well</p>'
+      );
+      return;
     }
 
-    const tableHeight = options.viewport.height - 100;
+    $(this.container).html('<table id="betterTable" class="display compact better-table"></table>');
 
-    this.betterTable = $('#betterTable').DataTable({
-      data: table.rows,
-      columns: columns,
-      scrollY: tableHeight + 'px',
-      scrollCollapse: true,
-      paging: false,
-    });
+    if (summaryColumns) {
+      summaryColumns.sort((a, b) => {
+        return a.rolesIndex.summaryRowColumn[0] - b.rolesIndex.summaryRowColumn[0];
+      });
 
-    console.log('Table rendered!');
+      const columns = summaryColumns.map((col) => {
+        return {
+          title: col.displayName,
+          data: col.index,
+          className: null,
+          orderable: true,
+          defaultContent: '-',
+          width: 'auto',
+          type: col.type,
+          format: col.format,
+        };
+      });
+
+      if (detailColumnindex !== -1) {
+        columns.unshift({
+          title: '',
+          className: 'dt-control',
+          orderable: false,
+          data: null,
+          defaultContent: '',
+          width: '1%',
+          type: 'control',
+          format: null,
+        });
+      }
+
+      const tableHeight = options.viewport.height - 80;
+
+      let formatTableData = (columns, rows) => {
+        let formatDate = (date, format) => {
+          let formatter = valueFormatter.create({ format: format });
+          return formatter.format(new Date(date));
+        };
+
+        let formatNumber = (number, format) => {
+          let formatter = valueFormatter.create({ value: 0, format: format });
+          return formatter.format(number);
+        };
+
+        columns.forEach((col, index) => {
+          if (col.type.dateTime) {
+            col.render = function (data, type, row, meta) {
+              return type === 'display' ? formatDate(data, col.format) : data;
+            };
+          }
+          if (col.type.numeric) {
+            col.render = function (data, type, row, meta) {
+              return type === 'display' ? formatNumber(data, col.format) : data;
+            };
+          }
+        });
+      };
+
+      let intialiseDataTable = () => {
+        formatTableData(columns, table.rows);
+
+        let betterTable = $('#betterTable').DataTable({
+          data: table.rows,
+          columns: columns,
+          scrollY: tableHeight + 'px',
+          scrollCollapse: true,
+          paging: false,
+          info: false,
+          order: detailColumnindex !== -1 ? [[1, 'asc']] : [[0, 'asc']],
+        });
+
+        $('#betterTable').on('click', 'td.dt-control', function () {
+          let tr = $(this).closest('tr');
+          let row = betterTable.row(tr);
+
+          if (row.child.isShown()) {
+            row.child.hide();
+            tr.removeClass('shown');
+          } else {
+            row.child(formatDetail(row.data())).show();
+            tr.addClass('shown');
+          }
+        });
+      };
+
+      if (DataTable.isDataTable('#betterTable')) {
+        $('#betterTable').DataTable().destroy();
+      }
+
+      intialiseDataTable();
+
+      let formatDetail = (d) => {
+        return `<div class="table-detail">${d[detailColumnindex]}</div>`;
+      };
+    }
   }
 
   private static parseSettings(dataView: DataView): VisualSettings {
