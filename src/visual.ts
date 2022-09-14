@@ -120,7 +120,7 @@ export class Visual implements IVisual {
         columns.forEach((col, index) => {
           if (col.type.dateTime) {
             col.render = function (data, type, row, meta) {
-              return type === 'display' ? formatDate(data, col.format) : data;
+              return type === 'display' && data !== null ? formatDate(data, col.format) : data;
             };
           }
           if (col.type.numeric) {
