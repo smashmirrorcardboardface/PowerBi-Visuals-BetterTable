@@ -142,6 +142,11 @@ export class Visual implements IVisual {
           paging: false,
           info: false,
           order: detailColumnindex !== -1 ? [[1, 'asc']] : [[0, 'asc']],
+          createdRow: function (row, data) {
+            if (data[detailColumnindex] === null) {
+              $(row).children('td:first').removeClass('dt-control');
+            }
+          },
         });
 
         $('#betterTable').on('click', 'td.dt-control', function () {
