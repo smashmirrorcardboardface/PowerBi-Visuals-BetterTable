@@ -35,3 +35,26 @@ table.dataTable.compact thead td {
 .dataTables_wrapper .dataTables_filter input {
     padding: 2px;
 }
+
+table.dataTable td.expand-control {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+
+table.dataTable td.expand-control:before {
+    height: 1em;
+    width: 1em;
+    display: inline-block;
+    box-sizing: content-box;
+    text-align: center;
+    text-indent: 0 !important;
+    font-family: "Courier New", Courier, monospace;
+    line-height: 1em;
+    font-size: large;
+    font-weight: bolder;
+    content: "+";
+}
+
+table.dataTable tr.dt-hasChild td.expand-control:before {
+    content: "-";
+}

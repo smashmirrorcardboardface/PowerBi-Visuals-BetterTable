@@ -94,7 +94,7 @@ export class Visual implements IVisual {
       if (detailColumnindex !== -1) {
         columns.unshift({
           title: '',
-          className: 'dt-control',
+          className: 'expand-control',
           orderable: false,
           data: null,
           defaultContent: '',
@@ -144,12 +144,12 @@ export class Visual implements IVisual {
           order: detailColumnindex !== -1 ? [[1, 'asc']] : [[0, 'asc']],
           createdRow: function (row, data) {
             if (data[detailColumnindex] === null) {
-              $(row).children('td:first').removeClass('dt-control');
+              $(row).children('td:first').removeClass('expand-control');
             }
           },
         });
 
-        $('#betterTable').on('click', 'td.dt-control', function () {
+        $('#betterTable').on('click', 'td.expand-control', function () {
           let tr = $(this).closest('tr');
           let row = betterTable.row(tr);
 
